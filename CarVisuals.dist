@@ -6,7 +6,6 @@ darcs / http://openengine.dk/code/openengine
 darcs-dev / fh.daimi.au.dk:/users/cgd/code/openengine
 
 # project repository
-# (uncomment the following two lines after uploading your project)
 darcs /projects/CarVisuals http://openengine.dk/code/projects/CarVisuals
 darcs-dev /projects/CarVisuals fh.daimi.au.dk:/users/cgd/code/projects/CarVisuals
 
@@ -39,4 +38,4 @@ win32 /libraries http://openengine.dk/data/libraries/dlls-win32.zip
 # linux libraries
 
 # project data
-
+any /resources		http://www.openengine.dk/data/images/SaintLazarusChurch.zip

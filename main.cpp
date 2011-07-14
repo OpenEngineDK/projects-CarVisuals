@@ -148,7 +148,7 @@ int main(int argc, char** argv) {
 
     ResourceManager<ITexture2D>::AddPlugin(new FreeImagePlugin());
     ResourceManager<IShaderResource>::AddPlugin(new GLShaderPlugin());
-    DirectoryManager::AppendPath("projects/carVisuals/");
+    DirectoryManager::AppendPath("projects/CarVisuals/");
     DirectoryManager::AppendPath("resources/");
 
     ICubemapPtr map = Cubemap::Create(2048, RGBA, true);

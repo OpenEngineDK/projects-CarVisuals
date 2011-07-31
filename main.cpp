@@ -189,13 +189,13 @@ int main(int argc, char** argv) {
     sphere->GetMaterial()->shad->SetTexture("environment", map);
 
     // Car model can be found on OE dropbox
-    IModelResourcePtr car = ResourceManager<IModelResource>::Create("resources/AudiR8/AudiR8.dae");
+    //IModelResourcePtr car = ResourceManager<IModelResource>::Create("resources/AudiR8/AudiR8.dae");
+    //car->Load();
 
     TransformationNode* trans = new TransformationNode();
     trans->Move(0,0,-10);
-    //ISceneNode* sphereNode = new MeshNode(sphere);
-    car->Load();
-    ISceneNode* sphereNode = car->GetSceneNode();
+    ISceneNode* sphereNode = new MeshNode(sphere);
+    //ISceneNode* sphereNode = car->GetSceneNode();
     
     
 

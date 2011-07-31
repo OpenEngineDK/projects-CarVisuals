@@ -22,7 +22,9 @@
 #include <Resources/Cubemap.h>
 #include <Resources/Directory.h>
 #include <Resources/ITexture.h>
+#include <Resources/IModelResource.h>
 #include <Resources/ResourceManager.h>
+#include <Scene/DotVisitor.h>
 #include <Scene/MeshNode.h>
 #include <Scene/SceneNode.h>
 
@@ -35,6 +37,7 @@
 #include <Resources/SDLImage.h>
 
 #include <Resources/FreeImage.h>
+#include <Resources/AssimpResource.h>
 
 
 // OpenGL stuff
@@ -92,7 +95,7 @@ public:
         tNode = new TransformationNode();
         
         MeshPtr cube = CreateCube(2000, 1, Vector<3,float>(1,1,1), true);
-        cube->GetMaterial()->shad = ResourceManager<IShaderResource>::Create("skybox.glsl");
+        cube->GetMaterial()->shad = ResourceManager<IShaderResource>::Create("shaders/skybox.glsl");
         cube->GetMaterial()->shad->SetTexture("skybox", skybox);
         
         MeshNode* mNode = new MeshNode(cube);
@@ -148,6 +151,7 @@ int main(int argc, char** argv) {
 
     ResourceManager<ITexture2D>::AddPlugin(new FreeImagePlugin());
     ResourceManager<IShaderResource>::AddPlugin(new GLShaderPlugin());
+    ResourceManager<IModelResource>::AddPlugin(new AssimpPlugin());
     DirectoryManager::AppendPath("projects/CarVisuals/");
     DirectoryManager::AppendPath("resources/");
 
@@ -181,13 +185,20 @@ int main(int argc, char** argv) {
     engine->ProcessEvent().Attach(*skyMod);
 
     MeshPtr sphere = CreateSphere(2, 25, Vector<3,float>(0,0,1));
-    sphere->GetMaterial()->shad = ResourceManager<IShaderResource>::Create("cubemap.glsl");
+    sphere->GetMaterial()->shad = ResourceManager<IShaderResource>::Create("shaders/cubemap.glsl");
     sphere->GetMaterial()->shad->SetTexture("environment", map);
+
+    // Car model can be found on OE dropbox
+    IModelResourcePtr car = ResourceManager<IModelResource>::Create("resources/AudiR8/AudiR8.dae");
 
     TransformationNode* trans = new TransformationNode();
     trans->Move(0,0,-10);
-    ISceneNode* sphereNode = new MeshNode(sphere);
+    //ISceneNode* sphereNode = new MeshNode(sphere);
+    car->Load();
+    ISceneNode* sphereNode = car->GetSceneNode();
     
+    
+
     canvas->GetScene()->AddNode(trans);
     trans->AddNode(sphereNode);
     
@@ -204,6 +215,9 @@ int main(int argc, char** argv) {
     env->GetMouse()->MouseMovedEvent().Attach(*move);
     
     env->GetKeyboard()->KeyEvent().Attach(*(new QuitHandler(*engine)));
+
+    DotVisitor* dot = new DotVisitor("Scene");
+    logger.info << dot->String(*(canvas->GetScene())) << logger.end;
 
     // Start the engine.
     engine->Start();

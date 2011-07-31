@@ -16,12 +16,12 @@ void main() {
     vec3 l = normalize(lightDir);
     vec3 e = normalize(eyeDir);
     
-    vec4 diffuse = 0.333 * (textureCube(environment, cubeReflect) +
-                          textureCube(environment, cubeReflect, 2.0) +
-                          textureCube(environment, cubeReflect, 4.0));
+    vec4 diffuse = 0.333 * (textureCube(environment, cubeReflect, 0.0) +
+                            textureCube(environment, cubeReflect, 2.0) +
+                            textureCube(environment, cubeReflect, 4.0));
 
     // Highligh intense colors
-    vec4 envColor = textureCube(environment, cubeReflect, 3.0);
+    vec4 envColor = textureCube(environment, cubeReflect, 1.0);
     float intensity = dot(grayscale, envColor.xyz);
     intensity = pow(intensity, 4.0);
     vec4 specular = envColor * intensity;

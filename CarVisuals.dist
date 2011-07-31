@@ -9,6 +9,8 @@ darcs-dev / fh.daimi.au.dk:/users/cgd/code/openengine
 darcs /projects/CarVisuals http://openengine.dk/code/projects/CarVisuals
 darcs-dev /projects/CarVisuals fh.daimi.au.dk:/users/cgd/code/projects/CarVisuals
 
+dist /extensions/Assimp/Assimp.dist	 http://openengine.dk/code/extensions/Assimp/Assimp.dist
+
 # required extensions
 darcs /extensions/HUD                    http://openengine.dk/code/extensions/HUD
 darcs /extensions/SDL                    http://openengine.dk/code/extensions/SDL

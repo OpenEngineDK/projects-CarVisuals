@@ -6,6 +6,8 @@ SET( PROJECT_NAME "CarVisuals")
 SET( PROJECT_SOURCES
   # Add all the cpp source files here
   main.cpp
+  Geometry/MaterialReplacer.h
+  Geometry/MaterialReplacer.cpp
 )
 
 # Include needed to use SDL under Mac OS X

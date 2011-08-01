@@ -1,6 +1,6 @@
 // main
 // -------------------------------------------------------------------
-// Copyright (C) 2007 OpenEngine.dk (See AUTHORS) 
+// Copyright (C) 2011 OpenEngine.dk (See AUTHORS) 
 // 
 // This program is free software; It is covered by the GNU General 
 // Public License version 2 or any later version. 
@@ -46,6 +46,9 @@
 #include <Renderers/OpenGL/RenderingView.h>
 #include <Renderers/OpenGL/ShaderLoader.h>
 #include <Resources/OpenGLShader.h>
+
+// Project
+#include "Geometry/MaterialReplacer.h"
 
 // name spaces that we will be using.
 // this combined with the above imports is almost the same as
@@ -132,7 +135,7 @@ int main(int argc, char** argv) {
     engine->ProcessEvent().Attach(*env);
     engine->DeinitializeEvent().Attach(*env);
 
-    Camera* camera  = new Camera(*(new PerspectiveViewingVolume()));
+    Camera* camera  = new Camera(*(new PerspectiveViewingVolume(1,4000)));
     Frustum* frustum = new Frustum(*camera);
     IRenderCanvas* canvas = new RenderCanvas(new TextureCopy());
     canvas->SetViewingVolume(frustum);
@@ -189,18 +192,22 @@ int main(int argc, char** argv) {
     sphere->GetMaterial()->shad->SetTexture("environment", map);
 
     // Car model can be found on OE dropbox
-    //IModelResourcePtr car = ResourceManager<IModelResource>::Create("resources/AudiR8/AudiR8.dae");
-    //car->Load();
+    IModelResourcePtr car = ResourceManager<IModelResource>::Create("resources/AudiR8/AudiR8.dae");
+    car->Load();
 
     TransformationNode* trans = new TransformationNode();
     trans->Move(0,0,-10);
-    ISceneNode* sphereNode = new MeshNode(sphere);
-    //ISceneNode* sphereNode = car->GetSceneNode();
+    //ISceneNode* sphereNode = new MeshNode(sphere);
+    ISceneNode* sphereNode = car->GetSceneNode();
+    
     
     
 
     canvas->GetScene()->AddNode(trans);
     trans->AddNode(sphereNode);
+
+    MaterialReplacer::InScene(canvas->GetScene(), "CarPaint", sphere->GetMaterial());
+
     
     textureloader->Load(map);
     
@@ -216,8 +223,8 @@ int main(int argc, char** argv) {
     
     env->GetKeyboard()->KeyEvent().Attach(*(new QuitHandler(*engine)));
 
-    DotVisitor* dot = new DotVisitor("Scene");
-    logger.info << dot->String(*(canvas->GetScene())) << logger.end;
+    // DotVisitor* dot = new DotVisitor("Scene");
+    // logger.info << dot->String(*(canvas->GetScene())) << logger.end;
 
     // Start the engine.
     engine->Start();

@@ -34,4 +34,6 @@ TARGET_LINK_LIBRARIES(${PROJECT_NAME}
   Extensions_SDL
   Extensions_FreeImage
   Extensions_AssimpResource
+  Extensions_Renderers2
+  Extensions_CairoResource
 )

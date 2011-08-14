@@ -54,7 +54,7 @@
 #include <Utils/FPSSurface.h>
 #include <Logging/ColorStreamLogger.h>
 
-
+#include <Display/InterpolatedViewingVolume.h>
 
 using OpenEngine::Renderers2::OpenGL::GLRenderer;
 using OpenEngine::Renderers2::OpenGL::GLContext;
@@ -88,13 +88,93 @@ private:
     TransformationNode* node;
 public:
     bool active;
-    Rotator(TransformationNode* node): node(node), active(false) {}
+    Rotator(TransformationNode* node): node(node), active(true) {}
     virtual ~Rotator() {};
 
     void Handle(OpenEngine::Core::ProcessEventArg arg) {
         if (!active || !node) return;
         float dt = float(arg.approx) * 1e-6;
-        node->Rotate(0.0, dt * .5, 0.0);
+        node->Rotate(0.0, dt * .3, 0.0);
+    }
+};
+
+class CamHandler: public IListener<KeyboardEventArg>
+                , public IListener<OpenEngine::Core::ProcessEventArg>
+                , public IListener<MouseMovedEventArg>,
+                  public IListener<MouseButtonEventArg> {
+private:
+    
+    void UpdateCamera() {
+        Vector<3,float> accPosition;
+        Quaternion<float> accRotation;
+        // get the transformations from the node chain
+        center->GetAccumulatedTransformations(&accPosition, &accRotation);
+
+        Vector<3,float> coords(r * sin(theta) * cos(phi),
+                               r * cos(theta),
+                               r * sin(theta) * sin(phi));
+
+
+        if (out) out->SetPosition(accPosition + coords);
+        cam->SetPosition(accPosition + coords);
+        cam->LookAt(accPosition);
+    }
+public:
+    Camera* cam;
+    TransformationNode* center, *out;
+    float r, theta, phi;
+    Rotator& rotator;
+    CamHandler(Camera* cam, TransformationNode* center, Rotator& rotator, TransformationNode* out = NULL)
+        : cam(cam), center(center), out(out), r(20.0), theta(OpenEngine::Math::PI*0.4), phi(0.0), rotator(rotator) {
+        UpdateCamera();
+    }
+    
+    virtual ~CamHandler() {}
+
+    void Handle(MouseMovedEventArg arg) {
+        if (arg.buttons & BUTTON_LEFT) {
+            // compute rotate difference
+            float dx = arg.dx; 
+            float dy = arg.dy; 
+
+            const float scale = 0.005;
+            theta -= dy * scale;
+            phi += dx * scale;
+
+            if (phi > PI * 2.0) phi -= PI * 2.0;
+            if (phi < 0.0) phi += PI * 2.0;
+
+            const float span = PI / 3.0;
+            if (theta > PI * 0.49) theta = PI * 0.49; 
+            if (theta < PI * 0.5 - span) theta = PI * 0.5 - span
+                                             ; 
+            UpdateCamera();
+        }
+    }
+
+    void Handle(MouseButtonEventArg arg) {
+        if (arg.button == BUTTON_WHEEL_UP) {
+            r -= 1.0;            
+            UpdateCamera();
+        }
+
+        if (arg.button == BUTTON_WHEEL_DOWN) {
+            r += 1.0;            
+            UpdateCamera();
+        }
+
+        if (arg.type == EVENT_PRESS && arg.button == BUTTON_LEFT) {
+            rotator.active = false;
+        } else if (arg.type == EVENT_RELEASE && arg.button == BUTTON_LEFT) {
+            rotator.active = true;
+        }
+    }
+
+    void Handle(KeyboardEventArg arg) {
+    }
+    
+    void Handle(OpenEngine::Core::ProcessEventArg arg) {
+        UpdateCamera();
     }
 };
 
@@ -112,6 +192,9 @@ private:
 
     HSLColor color;
     Material* carpaint;
+    
+    float num1, num2;
+    ShadowMap* shadow;
 
     void Play(unsigned int i) {
         if (i < animators.size()) {
@@ -138,7 +221,8 @@ public:
                   StereoCamera* cam,
                   vector<Animator*> animators,
                   Rotator& rotator,
-                  Material* carpaint) 
+                  Material* carpaint,
+                  ShadowMap* shadow) 
   : fxaa(fxaa)
   , ctx(ctx)
   , frame(frame)
@@ -151,7 +235,12 @@ public:
   , rotator(rotator)
   , color(HSLColor(0.0, 0.7, 0.8))
   , carpaint(carpaint)
-          { }
+  , num1(0.0), num2(0.0)
+  , shadow(shadow)
+    { 
+        shadow->SetMagicNumber1(num1);
+        shadow->SetMagicNumber2(num2);
+    }
           virtual ~CustomHandler() {}
 
     void Handle(KeyboardEventArg arg) {
@@ -209,6 +298,29 @@ public:
                     carpaint->changedEvent.Notify(carpaint);
                 }
                 break;
+            case KEY_s:
+                shadow->active = !shadow->active;
+                break;
+            case KEY_u:
+                num1 -= 10;
+                shadow->SetMagicNumber1(num1);
+                logger.info << "num1: " << num1 << logger.end;
+                break;
+            case KEY_i:
+                num1 += 10;
+                shadow->SetMagicNumber1(num1);
+                logger.info << "num1: " << num1 << logger.end;
+                break;
+            case KEY_o:
+                num2 -= 10;
+                shadow->SetMagicNumber2(num2);
+                logger.info << "num2: " << num2 << logger.end;
+                break;
+            case KEY_p:
+                num2 += 10;
+                shadow->SetMagicNumber2(num2);
+                logger.info << "num2: " << num2 << logger.end;
+                break;
             default: break;
             } 
         }
@@ -224,7 +336,6 @@ int main(int argc, char** argv) {
     bool docubemap = true;
     vector<string> files;
 
-    files.push_back("AudiR8/AudiR8.dae");
     files.push_back("marmor/marmor.dae");
 
     for (int i=1;i<argc;i++) {
@@ -273,16 +384,17 @@ int main(int argc, char** argv) {
     StereoCamera* stereoCam = new StereoCamera();
     Camera* cam = new Camera(*stereoCam);
 
-    cam->SetPosition(Vector<3,float>(10,10,10));
-    cam->LookAt(Vector<3,float>(0,0,0));
+    cam->SetPosition(Vector<3,float>(10,310,10));
+    cam->LookAt(Vector<3,float>(0,300,0));
+    
 
-    BetterMoveHandler* mh = new BetterMoveHandler(*cam, *mouse);
-    engine->InitializeEvent().Attach(*mh);
-    engine->ProcessEvent().Attach(*mh);
-    engine->DeinitializeEvent().Attach(*mh);
-    mouse->MouseMovedEvent().Attach(*mh);
-    mouse->MouseButtonEvent().Attach(*mh);
-    keyboard->KeyEvent().Attach(*mh);
+    // BetterMoveHandler* mh = new BetterMoveHandler(*cam, *mouse);
+    // engine->InitializeEvent().Attach(*mh);
+    // engine->ProcessEvent().Attach(*mh);
+    // engine->DeinitializeEvent().Attach(*mh);
+    // mouse->MouseMovedEvent().Attach(*mh);
+    // mouse->MouseButtonEvent().Attach(*mh);
+    // keyboard->KeyEvent().Attach(*mh);
 
     GLContext* ctx = new GLContext();
     GLRenderer* r = new GLRenderer(ctx);
@@ -291,10 +403,10 @@ int main(int argc, char** argv) {
     ShadowMap* shadowmap = new ShadowMap(width, height);
     r->InitializeEvent().Attach(*shadowmap);
     r->PostProcessEvent().Attach(*shadowmap);
-    IViewingVolume* shadowView = new PerspectiveViewingVolume(1,300);
+    IViewingVolume* shadowView = new PerspectiveViewingVolume(20,3000);
     Camera* shadowCam = new Camera(*(shadowView));
-    shadowCam->SetPosition(Vector<3,float>(10,10,10));
-    shadowCam->LookAt(Vector<3,float>(0,0,0));
+    shadowCam->SetPosition(Vector<3,float>(10.0,320,10.0));
+    shadowCam->LookAt(Vector<3,float>(0,300,0));
     shadowmap->SetViewingVolume(shadowCam);
 
     FXAAShader* fxaa = new FXAAShader();
@@ -344,22 +456,23 @@ int main(int argc, char** argv) {
     // root->DisableOption(RenderStateNode::COLOR_MATERIAL);
 
 
-    TransformationNode* lt = new TransformationNode();
-    lt->Move(10, 20, 10);
-    //lt->Rotate(-45, 0, 45);
-    PointLightNode* l = new PointLightNode();
-    l->constAtt = 1.0;
-    //DirectionalLightNode* l = new DirectionalLightNode();
-    //l->ambient = Vector<4,float>(0.5);//(0.2, 0.2, 0.3, 1.0) * 2;
-    lt->AddNode(l);
-    root->AddNode(lt);
     TransformationNode* scale = new TransformationNode();
     //scale->SetScale(Vector<3,float>(200,200,200));
+    scale->Move(0,300.0,0);
     root->AddNode(scale);
 
-    Rotator rotator(scale);
-    engine->ProcessEvent().Attach(rotator);
-        
+    TransformationNode* lt = new TransformationNode();
+    TransformationNode* lt2 = new TransformationNode();
+    lt2->Move(10.0, 50.0, 0.0);
+    //lt->Rotate(-45, 0, 45);
+    PointLightNode* l = new PointLightNode();
+    l->constAtt = .89;
+    l->linearAtt = 1.0 - 0.99;
+    //DirectionalLightNode* l = new DirectionalLightNode();
+    //l->ambient = Vector<4,float>(0.5);//(0.2, 0.2, 0.3, 1.0) * 2;
+    lt2->AddNode(l);
+    lt->AddNode(lt2);
+    root->AddNode(lt);
 
     SearchTool st;
     vector<Animator*> animators;
@@ -399,6 +512,25 @@ int main(int argc, char** argv) {
         cStereoCanvas->SetSkybox(cubemap);
     }
 
+
+    TransformationNode* carRoot = new TransformationNode();
+    // cam->Track(carRoot);
+    // cam->Follow(carRoot);
+
+    scale->AddNode(carRoot);
+    {
+        IModelResourcePtr resource = ResourceManager<IModelResource>::Create("AudiR8/AudiR8.dae");
+        
+        ISceneNode* node;
+        resource->Load();
+        node = resource->GetSceneNode();
+        resource->Unload();
+        if (node) {
+            carRoot->AddNode(node);
+        }
+        else logger.warning << "File: " << "AudiR8/AudiR8.dae" << " not loaded." << logger.end;
+
+    }
     for (unsigned int i = 0; i < files.size(); ++i) {
         try {
             IModelResourcePtr resource = ResourceManager<IModelResource>::Create(files[i]);
@@ -450,35 +582,24 @@ int main(int argc, char** argv) {
             mat->transparency = 0.5;
             if (docubemap)
                 mat->AddTexture(cubemap, "cubemap");
-            
         }
     }
+    
+    Rotator rotator(scale);
+    engine->ProcessEvent().Attach(rotator);
 
-    CustomHandler* ch = new CustomHandler(fxaa, ctx, frame, r, canvas, sStereoCanvas, cStereoCanvas, stereoCam, animators, rotator, carpaint);
+    CamHandler camH(cam, carRoot, rotator, lt);
+    keyboard->KeyEvent().Attach(camH);
+    mouse->MouseMovedEvent().Attach(camH);
+    mouse->MouseButtonEvent().Attach(camH);
+    engine->ProcessEvent().Attach(camH);
+
+
+    CustomHandler* ch = new CustomHandler(fxaa, ctx, frame, r, canvas, 
+                                          sStereoCanvas, cStereoCanvas, 
+                                          stereoCam, animators, rotator, 
+                                          carpaint, shadowmap);
     keyboard->KeyEvent().Attach(*ch);
-
-    
-    
-    
-    //root->AddNode(an);
-
-    // camera tool setup
-    // MouseSelection* ms =
-    //     new MouseSelection(env->GetFrame(),
-    //                        setup->GetMouse(),
-    //                        NULL);
-    // CameraTool* ct = new CameraTool(false);
-    // ms->BindTool(vp, ct);
-
-    // attach the mouse tool!
-    // setup->GetKeyboard().KeyEvent().Attach(*ms);
-    // setup->GetMouse().MouseMovedEvent().Attach(*ms);
-    // setup->GetMouse().MouseButtonEvent().Attach(*ms);
-    // setup->GetRenderer().PostProcessEvent().Attach(*ms);
-
-    // tl->Load(*root);
-    // DataBlockBinder* bob = new DataBlockBinder(setup->GetRenderer());
-    // bob->Bind(*root);
 
     // Start the engine.
     engine->Start();

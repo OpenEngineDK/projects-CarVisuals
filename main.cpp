@@ -235,7 +235,7 @@ public:
   , rotator(rotator)
   , color(HSLColor(0.0, 0.7, 0.8))
   , carpaint(carpaint)
-  , num1(0.0), num2(0.0)
+  , num1(4.0), num2(2.0)
   , shadow(shadow)
     { 
         shadow->SetMagicNumber1(num1);
@@ -403,7 +403,7 @@ int main(int argc, char** argv) {
     ShadowMap* shadowmap = new ShadowMap(width, height);
     r->InitializeEvent().Attach(*shadowmap);
     r->PostProcessEvent().Attach(*shadowmap);
-    IViewingVolume* shadowView = new PerspectiveViewingVolume(20,3000);
+    IViewingVolume* shadowView = new PerspectiveViewingVolume(1,300);
     Camera* shadowCam = new Camera(*(shadowView));
     shadowCam->SetPosition(Vector<3,float>(10.0,320,10.0));
     shadowCam->LookAt(Vector<3,float>(0,300,0));

@@ -130,7 +130,7 @@ public:
     }
     
     virtual ~CamHandler() {}
-
+    
     void Handle(MouseMovedEventArg arg) {
         if (arg.buttons & BUTTON_LEFT) {
             // compute rotate difference
@@ -178,6 +178,39 @@ public:
     }
 };
 
+
+class ColorHandler : public IListener<KeyboardEventArg>
+                   , public IListener<OpenEngine::Core::ProcessEventArg> {
+private:
+    bool active;
+    HSLColor color;
+    Material* carpaint;
+public:
+    ColorHandler(Material* carpaint): active(true), color(HSLColor(0.0, 0.7, 0.8)), carpaint(carpaint) {}
+    virtual ~ColorHandler() {}
+    
+    void Handle(KeyboardEventArg arg) {
+        if (arg.type == EVENT_PRESS) {
+            switch(arg.sym) {
+            case KEY_h:
+                active = !active;
+                break;
+            default: break;
+            }
+        }
+    }
+
+    void Handle(OpenEngine::Core::ProcessEventArg arg) {
+        if (!active || !carpaint) return;
+        
+        float dt = arg.approx * 1e-6;
+        color = HSLColor(fmod(color[0] + dt * 15.0f, 360.0), color[1], color[2]);
+        carpaint->diffuse = color.GetRGBA();
+        carpaint->changedEvent.Notify(carpaint);
+    }
+
+};
+
 class CustomHandler : public IListener<KeyboardEventArg> {
 private:
     FXAAShader* fxaa;
@@ -190,9 +223,6 @@ private:
 
     Rotator& rotator;
 
-    HSLColor color;
-    Material* carpaint;
-    
     float num1, num2;
     ShadowMap* shadow;
 
@@ -221,7 +251,6 @@ public:
                   StereoCamera* cam,
                   vector<Animator*> animators,
                   Rotator& rotator,
-                  Material* carpaint,
                   ShadowMap* shadow) 
   : fxaa(fxaa)
   , ctx(ctx)
@@ -233,15 +262,15 @@ public:
   , cam(cam)
   , animators(animators)
   , rotator(rotator)
-  , color(HSLColor(0.0, 0.7, 0.8))
-  , carpaint(carpaint)
   , num1(4.0), num2(2.0)
   , shadow(shadow)
     { 
         shadow->SetMagicNumber1(num1);
         shadow->SetMagicNumber2(num2);
     }
-          virtual ~CustomHandler() {}
+     
+
+    virtual ~CustomHandler() {}
 
     void Handle(KeyboardEventArg arg) {
         if (arg.type == EVENT_PRESS) {
@@ -290,13 +319,6 @@ public:
                 break;
             case KEY_r:
                 rotator.active = !rotator.active;
-                break;
-            case KEY_h:
-                if (carpaint) {
-                    color = HSLColor(fmod(color[0] + 5.0f, 360.0), color[1], color[2]);
-                    carpaint->diffuse = color.GetRGBA();
-                    carpaint->changedEvent.Notify(carpaint);
-                }
                 break;
             case KEY_s:
                 shadow->active = !shadow->active;
@@ -595,10 +617,14 @@ int main(int argc, char** argv) {
     engine->ProcessEvent().Attach(camH);
 
 
+    ColorHandler* colH = new ColorHandler(carpaint);
+    keyboard->KeyEvent().Attach(*colH);
+    engine->ProcessEvent().Attach(*colH);
+
     CustomHandler* ch = new CustomHandler(fxaa, ctx, frame, r, canvas, 
                                           sStereoCanvas, cStereoCanvas, 
                                           stereoCam, animators, rotator, 
-                                          carpaint, shadowmap);
+                                          shadowmap);
     keyboard->KeyEvent().Attach(*ch);
 
     // Start the engine.

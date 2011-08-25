@@ -10,6 +10,7 @@ darcs /projects/CarVisuals http://openengine.dk/code/projects/CarVisuals
 darcs-dev /projects/CarVisuals fh.daimi.au.dk:/users/cgd/code/projects/CarVisuals
 
 dist /extensions/Assimp/Assimp.dist	 http://openengine.dk/code/extensions/Assimp/Assimp.dist
+dist /extensions/GLFW/GLFW.dist	 http://openengine.dk/code/extensions/GLFW/GLFW.dist
 
 # required extensions
 darcs /extensions/SDL                    http://openengine.dk/code/extensions/SDL

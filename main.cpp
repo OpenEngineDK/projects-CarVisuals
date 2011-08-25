@@ -8,14 +8,15 @@
 //--------------------------------------------------------------------
 
 // OpenEngine stuff
-#include <Meta/Config.h>
+// #include <Meta/Config.h> // SDL only... gay!
 #include <Logging/Logger.h>
 #include <Devices/IKeyboard.h>
 #include <Devices/IMouse.h>
 #include <Scene/RenderStateNode.h>
 #include <Utils/SimpleRenderStateHandler.h>
 #include <Core/Engine.h>
-#include <Display/SDLEnvironment.h>
+// #include <Display/SDLEnvironment.h>
+#include <Display/GLFWEnvironment.h>
 #include <Display/Viewport.h>
 #include <Display/PerspectiveViewingVolume.h>
 #include <Display/Camera.h>
@@ -132,6 +133,7 @@ public:
     virtual ~CamHandler() {}
     
     void Handle(MouseMovedEventArg arg) {
+                
         if (arg.buttons & BUTTON_LEFT) {
             // compute rotate difference
             float dx = arg.dx; 
@@ -388,7 +390,8 @@ int main(int argc, char** argv) {
     ResourceManager<ITextureResource>::AddPlugin(new FreeImagePlugin());
 
     Engine* engine = new Engine();
-    IEnvironment* env = new SDLEnvironment(width,height);
+    //IEnvironment* env = new SDLEnvironment(width,height);
+    IEnvironment* env = new GLFWEnvironment(width,height);
     engine->InitializeEvent().Attach(*env);
     engine->ProcessEvent().Attach(*env);
     engine->DeinitializeEvent().Attach(*env);    
@@ -420,7 +423,7 @@ int main(int argc, char** argv) {
 
     GLContext* ctx = new GLContext();
     GLRenderer* r = new GLRenderer(ctx);
-    ((SDLFrame*)(&frame))->SetRenderModule(r);
+    frame.SetRenderModule(r);
 
     ShadowMap* shadowmap = new ShadowMap(width, height);
     r->InitializeEvent().Attach(*shadowmap);

@@ -2,32 +2,32 @@
 # http://www.openengine.dk/wiki/Projects/CarVisuals
 
 # main repository
-darcs / http://openengine.dk/code/openengine
-darcs-dev / fh.daimi.au.dk:/users/cgd/code/openengine
+git / https://github.com/OpenEngineDK/openengine.git
+git-dev / git@github.com:OpenEngineDK/openengine.git
 
 # project repository
-darcs /projects/CarVisuals http://openengine.dk/code/projects/CarVisuals
-darcs-dev /projects/CarVisuals fh.daimi.au.dk:/users/cgd/code/projects/CarVisuals
+git /projects/CarVisuals https://github.com/OpenEngineDK/projects-CarVisuals.git
+git-dev /projects/CarVisuals git@github.com:OpenEngineDK/projects-CarVisuals.git
 
-dist /extensions/Assimp/Assimp.dist	 http://openengine.dk/code/extensions/Assimp/Assimp.dist
-dist /extensions/GLFW/GLFW.dist	 http://openengine.dk/code/extensions/GLFW/GLFW.dist
+dist /extensions/Assimp/Assimp.dist	 https://raw.githubusercontent.com/OpenEngineDK/extensions-Assimp/master/Assimp.dist
+dist /extensions/GLFW/GLFW.dist	 https://raw.githubusercontent.com/OpenEngineDK/extensions-GLFW/master/GLFW.dist
 
 # required extensions
-darcs /extensions/SDL                    http://openengine.dk/code/extensions/SDL
-darcs /extensions/FreeImage              http://openengine.dk/code/extensions/FreeImage
-darcs /extensions/CairoResource          http://openengine.dk/code/extensions/CairoResource
-darcs /extensions/Renderer2              http://openengine.dk/code/extensions/Renderer2
-darcs /extensions/OpenGLRenderer         http://openengine.dk/code/extensions/OpenGLRenderer
-darcs /extensions/MeshUtils              http://openengine.dk/code/extensions/MeshUtils
-darcs /extensions/GenericHandlers        http://openengine.dk/code/extensions/GenericHandlers
+git /extensions/SDL                    https://github.com/OpenEngineDK/extensions-SDL.git
+git /extensions/FreeImage              https://github.com/OpenEngineDK/extensions-FreeImage.git
+git /extensions/CairoResource          https://github.com/OpenEngineDK/extensions-CairoResource.git
+git /extensions/Renderer2              https://github.com/OpenEngineDK/extensions-Renderer2.git
+git /extensions/OpenGLRenderer         https://github.com/OpenEngineDK/extensions-OpenGLRenderer.git
+git /extensions/MeshUtils              https://github.com/OpenEngineDK/extensions-MeshUtils.git
+git /extensions/GenericHandlers        https://github.com/OpenEngineDK/extensions-GenericHandlers.git
 
-darcs-dev /extensions/SDL                fh.daimi.au.dk:/users/cgd/code/extensions/SDL
-darcs-dev /extensions/FreeImage          fh.daimi.au.dk:/users/cgd/code/extensions/FreeImage
-darcs-dev /extensions/CairoResource      fh.daimi.au.dk:/users/cgd/code/extensions/CairoResource
-darcs-dev /extensions/Renderer2          fh.daimi.au.dk:/users/cgd/code/extensions/Renderer2
-darcs-dev /extensions/OpenGLRenderer     fh.daimi.au.dk:/users/cgd/code/extensions/OpenGLRenderer
-darcs-dev /extensions/MeshUtils          fh.daimi.au.dk:/users/cgd/code/extensions/MeshUtils
-darcs-dev /extensions/GenericHandlers    fh.daimi.au.dk:/users/cgd/code/extensions/GenericHandlers
+git-dev /extensions/SDL                git@github.com:OpenEngineDK/extensions-SDL.git
+git-dev /extensions/FreeImage          git@github.com:OpenEngineDK/extensions-FreeImage.git
+git-dev /extensions/CairoResource      git@github.com:OpenEngineDK/extensions-CairoResource.git
+git-dev /extensions/Renderer2          git@github.com:OpenEngineDK/extensions-Renderer2.git
+git-dev /extensions/OpenGLRenderer     git@github.com:OpenEngineDK/extensions-OpenGLRenderer.git
+git-dev /extensions/MeshUtils          git@github.com:OpenEngineDK/extensions-MeshUtils.git
+git-dev /extensions/GenericHandlers    git@github.com:OpenEngineDK/extensions-GenericHandlers.git
 
 # windows libraries
 win32 /libraries http://openengine.dk/data/libraries/boost-win32.zip
